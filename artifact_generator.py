@@ -1,4 +1,5 @@
 import random
+import copy
 from re import sub
 
 class Timer():
@@ -31,20 +32,19 @@ class Artifact:
         if type == types[0]:
             mainstat.primary = mainstats_flower[0]
             mainstat.primary_value = mainstats_flower_value[0]
-            Artifact.removing_substat(substats_updated_list[0], substats_value_updated_list[0])
+            Artifact.removing_substat(substats[0])
         elif type == types[1]:
             mainstat.primary = mainstats_plume[0]
             mainstat.primary_value = mainstats_plume_value[0]
-            Artifact.removing_substat(substats_updated_list[1], substats_value_updated_list[1])
+            Artifact.removing_substat(substats[1])
         elif type == types[2]:
             index = random.choice(range(len(list(mainstats_sands))))
             mainstat.primary = mainstats_sands[index]
             mainstat.primary_value = mainstats_sands_value[index]
             i = 0
-            for x in substats_updated_list:
-                if x == mainstat.primary:
-                    substats_updated_list.remove(x)
-                    substats_value_updated_list.pop(i)
+            for x in substats:
+                if x.secondary == mainstat.primary:
+                    substats.remove(x)
                     break
                 i += 1
 
@@ -53,10 +53,9 @@ class Artifact:
             mainstat.primary = mainstats_goblet[index]
             mainstat.primary_value = mainstats_goblet_value[index]
             i = 0
-            for x in substats_updated_list:    
-                if x == mainstat.primary:
-                    substats_updated_list.remove(x)
-                    substats_value_updated_list.pop(i)
+            for x in substats:
+                if x.secondary == mainstat.primary:
+                    substats.remove(x)
                     break
                 i += 1
 
@@ -65,39 +64,34 @@ class Artifact:
             mainstat.primary = mainstats_circlet[index]
             mainstat.primary_value = mainstats_circlet_value[index]
             i = 0
-            for x in substats_updated_list:
-                if x == mainstat.primary:
-                    substats_updated_list.remove(x)
-                    substats_value_updated_list.pop(i)
+            for x in substats:
+                if x.secondary == mainstat.primary:
+                    substats.remove(x)
                     break
                 i += 1
 
         return mainstat 
 
-    def removing_substat(stat, stat_value):
-        for x in substats_updated_list:
-            if x == stat:
-                substats_updated_list.remove(x)
-                for y in substats_value_updated_list:
-                    if y == stat_value:
-                        substats_value_updated_list.remove(y)
-                        break
-        return substats_updated_list, substats_value_updated_list
+    def removing_substat(substat):
+        for x in substats:
+            if x.secondary == substat.secondary:
+                substats.remove(x)
     
     def generate_substat():
         substat = Substat("", 0)
-        index = random.choice(range(len(list(substats_updated_list))))
-        substat.secondary = substats_updated_list[index]
-        substat.secondary_value = substats_value_updated_list[index]
+        index = random.choice(range(len(list(substats))))
+        substat.secondary = substats[index].secondary
+        substat.secondary_value = substats[index].secondary_value
         return substat
 
     def upgrade_artifact(upgrade_substat):
-        index = random.choice(range(len(list(artifact_substats))))
         stat_roll = [1, 0.9, 0.8, 0.7]
+        i = 0
         for x in artifact_substats: 
-            if x == upgrade_substat:
-                upgrade_substat.secondary_value += (artifact_substats[index].secondary_value * random.choice(list(stat_roll)))
-        return upgrade_substat
+            if x.secondary == upgrade_substat.secondary:
+                artifact_substats[i].secondary_value += (artifact_substats_copy[i].secondary_value * random.choice(list(stat_roll)))
+                break
+            i += 1
          
 class Type:
     def __init__(self, name):
@@ -126,10 +120,22 @@ class Substat:
         self.secondary = secondary
         self.secondary_value = secondary_value
 
-substats = ["HP", "ATK", "DEF", "HP(%)", "ATK(%)", "DEF(%)", "Elemental Mastery", "Energy Recharge(%)", "Crit Rate(%)", "Crit DMG(%)"]
-substats_updated_list = ["HP", "ATK", "DEF", "HP(%)", "ATK(%)", "DEF(%)", "Elemental Mastery", "Energy Recharge(%)", "Crit Rate(%)", "Crit DMG(%)"]
-substats_value = [298.75, 19.45, 23.15, 5.83, 5.83, 7.29, 23.31, 6.48, 3.89, 7.77]
-substats_value_updated_list = [298.75, 19.45, 23.15, 5.83, 5.83, 7.29, 23.31, 6.48, 3.89, 7.77]
+substat_hp = Substat("HP", 298.75)
+substat_atk = Substat("ATK", 19.45)
+substat_def = Substat("DEF", 23.15)
+substat_hp_percentage = Substat("HP(%)", 5.83)
+substat_atk_percentage = Substat("ATK(%)", 5.83)
+substat_def_percentage = Substat("DEF(%)", 7.29)
+substat_elemental_mastery = Substat("Elemental Mastery", 23.31)
+substat_energy_recharge_percentage = Substat("Energy Recharge(%)", 6.48)
+substat_crit_rate_percentage = Substat("Crit Rate(%)", 3.89)
+substat_crit_dmg_percentage = Substat("Crit DMG(%)", 7.77)
+
+substats = [substat_hp, substat_atk, substat_def, 
+substat_hp_percentage, substat_atk_percentage, substat_def_percentage, 
+substat_elemental_mastery, substat_energy_recharge_percentage, 
+substat_crit_rate_percentage, substat_crit_dmg_percentage]
+
 
 type = Type(random.choice(list(types)))
 generate_mainstat = Artifact.generate_mainstat(type.name)
@@ -139,28 +145,32 @@ artifact_substats = []
 generate_substat = Artifact.generate_substat()
 substat1 = Substat(generate_substat.secondary, generate_substat.secondary_value)
 artifact_substats.append(substat1)
-Artifact.removing_substat(substat1.secondary, substat1.secondary_value)
+Artifact.removing_substat(substat1)
 
 generate_substat = Artifact.generate_substat()
 substat2 = Substat(generate_substat.secondary, generate_substat.secondary_value)
 artifact_substats.append(substat2)
-Artifact.removing_substat(substat2.secondary, substat2.secondary_value)
+Artifact.removing_substat(substat2)
 
 generate_substat = Artifact.generate_substat()
 substat3 = Substat(generate_substat.secondary, generate_substat.secondary_value)
 artifact_substats.append(substat3)
-Artifact.removing_substat(substat3.secondary, substat3.secondary_value)
+Artifact.removing_substat(substat3)
 
 generate_substat = Artifact.generate_substat()
 substat4 = Substat(generate_substat.secondary, generate_substat.secondary_value)
 artifact_substats.append(substat4)
-Artifact.removing_substat(substat4.secondary, substat4.secondary_value)
+Artifact.removing_substat(substat4)
+
+artifact_substats_copy = copy.deepcopy(artifact_substats) 
+
+Artifact.upgrade_artifact(random.choice((list(artifact_substats))))
+Artifact.upgrade_artifact(random.choice((list(artifact_substats))))
+Artifact.upgrade_artifact(random.choice((list(artifact_substats))))
+Artifact.upgrade_artifact(random.choice((list(artifact_substats))))
+Artifact.upgrade_artifact(random.choice((list(artifact_substats))))
 
 artifact = Artifact(type, mainstat, artifact_substats)
-Artifact.upgrade_artifact(random.choice((list(artifact_substats))))
-Artifact.upgrade_artifact(random.choice((list(artifact_substats))))
-Artifact.upgrade_artifact(random.choice((list(artifact_substats))))
-Artifact.upgrade_artifact(random.choice((list(artifact_substats))))
 
 print("Artifact Type: " + artifact.type.name + "\n" 
 "Artifact Mainstat: " + artifact.mainstat.primary + ", Value: " + str(artifact.mainstat.primary_value) + "\n"
